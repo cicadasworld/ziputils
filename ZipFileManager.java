@@ -1,8 +1,6 @@
 package cn.jin;
 
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,20 +12,20 @@ import java.util.zip.ZipOutputStream;
 
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 
-public final class ZipUtils {
+public class ZipFileManager {
 
-    private ZipUtils() {}
+    private final Path zipFile;
 
-    public static void unzip(Path zipFile, Path outputDir) throws IOException {
-        unzip(zipFile, outputDir, StandardCharsets.UTF_8);
+    public ZipFileManager(Path zipFile) {
+        this.zipFile = zipFile;
     }
 
-    public static void unzip(Path zipFile, Path outputDir, Charset charset) throws IOException {
+    public void unzip(Path outputDir) throws IOException {
         if (!Files.isRegularFile(zipFile)) {
             throw new IOException("Wrong zip file: " + zipFile);
         }
 
-        try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(zipFile), charset)) {
+        try (ZipInputStream zipInputStream = new ZipInputStream(Files.newInputStream(zipFile))) {
             if (Files.notExists(outputDir)) {
                 Files.createDirectories(outputDir);
             }
@@ -51,17 +49,13 @@ public final class ZipUtils {
         }
     }
 
-    public static void zip(Path zipFile, Path source) throws IOException {
-        zip(zipFile, source, StandardCharsets.UTF_8);
-    }
-
-    public static void zip(Path zipFile, Path source, Charset charset) throws IOException {
+    public void zip(Path source) throws IOException {
         Path zipDir = zipFile.getParent();
         if (Files.notExists(zipDir)) {
             Files.createDirectories(zipDir);
         }
 
-        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipFile), charset)) {
+        try (ZipOutputStream zipOutputStream = new ZipOutputStream(Files.newOutputStream(zipFile))) {
             if (Files.isDirectory(source)) {
                 List<Path> fileNames = new ArrayList<>();
                 getFileList(source, fileNames);
@@ -76,7 +70,7 @@ public final class ZipUtils {
         }
     }
 
-    private static void getFileList(Path path, List<Path> fileNames) throws IOException {
+    private void getFileList(Path path, List<Path> fileNames) throws IOException {
         if (Files.isRegularFile(path)) {
             fileNames.add(path);
         } else if (Files.isDirectory(path)) {
@@ -88,7 +82,7 @@ public final class ZipUtils {
         }
     }
 
-    private static void addNewZipEntry(ZipOutputStream zipOutputStream, Path filePath, Path fileName) throws IOException {
+    private void addNewZipEntry(ZipOutputStream zipOutputStream, Path filePath, Path fileName) throws IOException {
         Path fullPath = filePath.resolve(fileName);
         ZipEntry entry = new ZipEntry(fileName.toString());
         zipOutputStream.putNextEntry(entry);
