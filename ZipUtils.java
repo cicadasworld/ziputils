@@ -34,6 +34,10 @@ public final class ZipUtils {
 
             ZipEntry zipEntry;
             while ((zipEntry = zipInputStream.getNextEntry()) != null) {
+                if (zipEntry.isDirectory()) {
+                    zipInputStream.closeEntry();
+                    continue;
+                }
                 Path fileFullName = outputDir.resolve(zipEntry.getName());
                 // prevent zip slip vulnerability.
                 // make sure normalized file still has outputDir as its prefix else throw exception
@@ -90,7 +94,7 @@ public final class ZipUtils {
 
     private static void addNewZipEntry(ZipOutputStream zipOutputStream, Path filePath, Path fileName) throws IOException {
         Path fullPath = filePath.resolve(fileName);
-        ZipEntry entry = new ZipEntry(fileName.toString());
+        ZipEntry entry = new ZipEntry(filePath.getParent().relativize(fileName).toString());
         zipOutputStream.putNextEntry(entry);
         Files.copy(fullPath, zipOutputStream);
         zipOutputStream.closeEntry();
